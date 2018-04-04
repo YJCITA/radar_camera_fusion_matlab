@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<demos>
+  <name>Automated Driving System</name>
+  <type>toolbox</type>
+  <icon>$toolbox/matlab/icons/matlabicon.gif</icon>
+  <description isCdata="no">
+    <p>Automated Driving System Toolbox&#8482; provides algorithms 
+    and tools for the design and simulation of automated driving systems.
+    Algorithms and tools are available as functions (for use in MATLAB&#174;) and blocks (for use in Simulink&#174;).</p>
+  </description>
+
+  <!-- ++++++++++++++++++++++++++ MATLAB ++++++++++++++++++++++++++++ -->
+  
+  <demosection> <!-- START OF MATLAB EXAMPLES -->
+    <label>MATLAB Examples</label>
+
+    <!-- ************** Section break ************* -->
+    <demosection>
+      <label>Reference Applications</label> <!-- Section name -->
+
+      <demoitem>
+        <label>Visual Perception Using Monocular Camera</label>
+        <source>MonoCameraExample</source>
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Forward Collision Warning Using Sensor Fusion</label>
+        <source>ForwardCollisionWarningTrackingExample</source>
+        <type>M-file</type>
+      </demoitem>
+      
+      <demoitem>
+        <label>Sensor Fusion Using Synthetic Radar and Vision Data</label>
+        <source>SensorFusionUsingSyntheticDataExample</source>
+        <type>M-file</type>
+      </demoitem>
+
+    </demosection>    
+    
+    <!-- ************** Section break ************* -->
+    <demosection>
+      <label>Tracking and Sensor Fusion</label>
+
+      <demoitem>
+        <label>Forward Collision Warning Using Sensor Fusion</label>
+        <source>ForwardCollisionWarningTrackingExample</source>
+        <type>M-file</type>
+      </demoitem>
+            
+      <demoitem>
+        <label>Track Multiple Vehicles Using a Camera</label>
+        <source>VehicleTrackingExample</source>
+        <type>M-file</type>
+      </demoitem>
+      
+      <demoitem>
+        <label>Track Pedestrians from a Moving Car</label>
+        <source>PedestrianTrackingExample</source>
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Multiple Object Tracking Tutorial</label>
+        <source>MultiObjectTrackerExample</source>        
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Code Generation for Tracking and Sensor Fusion</label>
+        <source>TrackingCodeGenerationExample</source>
+        <type>M-file</type>
+        <dependency>MATLAB Coder</dependency>
+      </demoitem>
+      
+    </demosection>
+
+    <!-- ************** Section break ************* -->
+    <demosection>
+      <label>Perception with Computer Vision</label>
+
+      <demoitem>
+        <label>Visual Perception Using Monocular Camera</label>
+        <source>MonoCameraExample</source>
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Ground Plane and Obstacle Detection Using Lidar</label>
+        <source>GroundPlaneAndObstacleDetectionUsingLidarExample</source>
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Train a Deep Learning Vehicle Detector</label>
+        <source>TrainingDeepLearningVehicleDetectorExample</source>
+        <thumbnail>html/TrainingDeepLearningVehicleDetectorExample_02.png</thumbnail>
+        <dependency>Neural Network Toolbox</dependency>
+        <type>M-file</type>
+      </demoitem>
+      
+    </demosection>
+
+    
+    <!-- ************** Section break ************* -->
+    <demosection>
+      <label>Algorithm Validation and Visualization</label>
+
+      <demoitem>
+        <label>Automate Ground Truth Labeling of Lane Boundaries</label>
+        <source>AutomatingGroundTruthLabelingofLaneBoundaries</source>
+        <type>M-file</type>
+      </demoitem>
+      
+      <demoitem>
+        <label>Annotate Video Using Detections in Vehicle Coordinates</label>
+        <source>UsingMonoCameraToDisplayObjectOnVideoExample</source>
+        <type>M-file</type>
+      </demoitem>
+      
+      <demoitem>
+        <label>Visualize Sensor Coverage, Detections, and Tracks</label>
+        <source>BirdsEyePlotExample</source>
+        <type>M-file</type>
+      </demoitem>
+      
+      <demoitem>
+        <label>Evaluate Lane Boundary Detections Against Ground Truth Data</label>
+        <source>EvaluatingLaneBoundaryModelsExample</source>
+        <type>M-file</type>
+      </demoitem>
+      
+      <demoitem>
+        <label>Evaluate and Visualize Lane Boundary Detections Against Ground Truth</label>
+        <source>EvaluateAndVisualizeLaneBoundaryDetectionsExample</source>
+        <type>M-file</type>
+      </demoitem>
+            
+    </demosection>
+    
+    <!-- ************** Section break ************* -->
+    <demosection>
+      <label>Scenario Generation</label>
+
+      <demoitem>
+        <label>Sensor Fusion Using Synthetic Radar and Vision Data</label>
+        <source>SensorFusionUsingSyntheticDataExample</source>
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Driving Scenario Tutorial</label>
+        <source>DrivingScenarioTutorial</source>        
+        <type>M-file</type>
+      </demoitem>
+      
+      <demoitem>
+        <label>Define Road Layouts</label>
+        <source>RoadJunctionGalleryExample</source>        
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Create Actor and Vehicle Paths</label>
+        <source>ActorPathGalleryExample</source>        
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Model Radar Sensor Detections</label>
+        <source>ModelRadarSensorDetectionsExample</source>        
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Model Vision Sensor Detections</label>
+        <source>ModelVisionSensorDetectionsExample</source>        
+        <type>M-file</type>
+      </demoitem>
+
+      <demoitem>
+        <label>Radar Signal Simulation and Processing for Automated Driving</label>
+        <source>AutomatedDrivingRadarSignalProcessingExample</source>        
+        <type>M-file</type>
+        <dependency>Phased Array System Toolbox</dependency>
+      </demoitem>
+    </demosection>
+    
+    <!-- ************** Section break ************* -->
+    
+  </demosection> <!-- END OF MATLAB EXAMPLES -->
+  
+  <!-- +++++++++++++++++++++++++ SIMULINK +++++++++++++++++++++++++++ -->
+  
+  <demosection> <!-- START OF SIMULINK EXAMPLES -->
+    <label>Simulink Examples</label>
+       
+      <demoitem>
+        <label>Sensor Fusion Using Synthetic Radar and Vision Data</label>
+        <source>SyntheticDataSimulinkExample</source>
+        <file>html/SyntheticDataSimulinkExample.html</file>
+        <thumbnail>html/SyntheticDataSimulinkExample_03.png</thumbnail>
+        <type>model</type>
+        <dependency>Simulink</dependency>
+      </demoitem>
+      
+      <demoitem>
+        <label>Adaptive Cruise Control with Sensor Fusion</label>
+        <source>ACCwithSensorFusionExample</source>
+        <file>html/ACCTestBenchExample.html</file>
+        <thumbnail>html/ACCTestBenchExample_02.png</thumbnail>
+        <type>model</type>
+        <dependency>Simulink</dependency>
+      </demoitem>
+    
+  </demosection> <!-- END OF SIMULINK EXAMPLES -->
+  
+</demos>
+
+
+

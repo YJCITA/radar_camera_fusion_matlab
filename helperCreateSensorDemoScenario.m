@@ -1,0 +1,273 @@
+% This is a helper function and may be changed or removed without notice.
+
+%   Copyright 2016 The MathWorks, Inc.
+
+% Creates forward collision warning (FCW), passing car, and side-by-side
+% motorcycle scenarios
+function [scenario, egoCar] = helperCreateSensorDemoScenario(scenarioType,varargin)
+
+% Dispatch call to local function used to generate requested scenario type
+switch lower(scenarioType(1))
+    case 'f' % FCW
+        [scenario, egoCar] = createFCWScenario(varargin{:});
+    case 'p' % Passing
+        [scenario, egoCar] = createPassingScenario(varargin{:});
+    case 's' % Side-by-Side
+        [scenario, egoCar] = createSideBySideScenario(varargin{:});
+end
+end
+
+% Creates a forward collision warning (FCW) driving scenario with two
+% vehicles: an ego vehicle and a target vehicle. The ego vehicle will be
+% traveling at initSpeed kph towards a stationary target vehicle which is
+% initDist meters away at the start of the test. The ego vehicle will apply
+% brakes to achieve a constant deceleration of brakeAccel m/s^2 so that it
+% comes to a stop finalDist meters before the rear bumper of the target
+% vehicle.
+%
+% Optionally, a pedestrian can be added to the scenario. The pedestrian
+% will be standing to the left of the stationary vehicle as the ego vehicle
+% approaches.
+%
+% Optionally, the ego vehicle can be placed on a hill heightOffset meters
+% above the target vehicle (and pedestrian).
+function [scenario, egoCar] = createFCWScenario(initDist,initSpeed,brakeAccel,finalDist,withPedestrian,heightOffset)
+
+% By default no pedestrian is added to the scenario
+if nargin<5
+    withPedestrian = false;
+end
+
+% By default the ego and target vehicles are at the same height
+if nargin<6
+    heightOffset = 0;
+end
+
+% Define an empty scenario
+scenario = drivingScenario;
+scenario.SampleTime = 0.01;
+
+% Create a straight road segment
+
+% initDist is the initial distance between front bumper of ego vehicle and
+% rear bumper of target vehicle
+
+approxCarLength = 5;
+laneWidth = 3.6;
+
+xStart = 0;
+zStart = heightOffset; % Initial height of the ego relative to the target car
+
+% Final height is reached approximately one car length before stopping
+xHillEnd = initDist-finalDist-approxCarLength;
+
+xEnd = initDist;
+xEnd = xEnd+approxCarLength; % Extra to accomodate target car's length
+xEnd = xEnd+100; % Extra so end of road does not show in the bird's eye plot
+zEnd = 0; % Final height of both cars
+
+roadCenters = [ ...
+    xStart   0  zStart;...
+    xHillEnd 0 zEnd;...     % End of hill descent
+    xEnd     0  zEnd];      % Ego stopped
+roadWidth = laneWidth;      % Single lane road
+road(scenario, roadCenters, roadWidth);
+
+% Place the ego vehicle and the target vehicle on the road separated by
+% initDist meters. The ego vehicle will initially be traveling towards
+% the target vehicle at initSpeed kph. The target vehicle is stationary.
+
+% Add ego vehicle
+egoCar = vehicle(scenario);
+
+% Compute braking profile for ego vehicle
+vel = initSpeed/3.6; % m/s
+accel = -brakeAccel; % m/s^2
+tStop = -vel/accel; % Time required to come to a complete stop
+dStop = 0.5*accel*tStop^2+vel*tStop; % Stopping distance
+xStartBrake = initDist-(dStop+finalDist)-(egoCar.Wheelbase+egoCar.FrontOverhang)+egoCar.RearOverhang;
+xStopped = initDist-finalDist+egoCar.RearOverhang;
+x = [...
+    egoCar.RearOverhang;...
+    xStartBrake;...
+    xStopped];
+
+% Add waypoint for the end of the hill
+if any(x>xHillEnd)
+    x = sort([x;xHillEnd]);
+end
+z = interp1(roadCenters(:,1),roadCenters(:,3),x,'pchip');
+
+numPts = numel(x);
+egoWaypoints = zeros(numPts,3);
+egoWaypoints(:,1) = x;
+egoWaypoints(:,3) = z;
+
+% Velocity profile for waypoints
+velWaypoints = vel*ones(numPts,1);
+iFnd = x>xStartBrake;
+velWaypoints(iFnd) = interp1([xStartBrake xStopped],[vel 0],x(iFnd));
+
+path(egoCar,egoWaypoints,velWaypoints);
+
+% Add stationary target vehicle
+tgtCar = vehicle(scenario);
+x = initDist+tgtCar.RearOverhang+egoCar.Wheelbase+egoCar.FrontOverhang+egoCar.RearOverhang;
+tgtCar.Position = [x 0 0];
+
+
+% Add pedestrian standing on sidewalk next to stopped car
+if withPedestrian
+    % Add an actor with the dimensions of a typical pedestrian
+    ped = actor(scenario,'Length',0.24,'Width',0.45,'Height',1.7);
+    x = initDist+tgtCar.RearOverhang+egoCar.Wheelbase+egoCar.FrontOverhang;
+    ped.Position = [x laneWidth 0];
+    ped.RCSPattern(:) = -8; % Average RCS for a pedestrian
+end
+end
+
+% Creates a scenario with 3 cars. A ego vehicle and a lead car in front of
+% the ego vehicle by leadDist meters, both traveling in the right lane at
+% speed kph. A third vehicle which starts initially in the left lane next
+% to the ego vehicle traveling at passSpeed kph and then merges into the
+% right lane immediately behind the lead car after passing the ego vehicle.
+function [scenario, egoCar] = createPassingScenario(leadDist,speed,passSpeed,mergeFract)
+
+% Fraction to merge into lane. Corresponds to the ammount of occlusion
+% generated by the passing car for the lead car. By default, the lead car
+% is completely (100%) occluded by the passing car after it merges into the
+% right lane.
+if nargin<4
+    mergeFract = 1;
+end
+
+% Define an empty scenario
+scenario = drivingScenario;
+scenario.SampleTime = 0.01;
+
+egoCar = vehicle(scenario);
+leadCar = vehicle(scenario);
+passCar = vehicle(scenario);
+
+% Calculate passing vehicle's waypoints and velocity profile
+vel = speed/3.6; % m/s
+passVel = passSpeed/3.6; % m/s
+dMerge = egoCar.Length; % Distance in front of ego vehicle to begin merge
+passLength = 6*egoCar.Length-(egoCar.Wheelbase+egoCar.FrontOverhang)+dMerge;
+tPass = passLength/(passVel-vel);
+dPass = passVel*tPass;
+tChangeLane = 2; % Time used by passing car to change lanes
+dChangeLane = vel*tChangeLane;
+tContinue = 3; % Time to continue scenario after lane change
+dContinue = vel*tContinue;
+totDist = dContinue+dChangeLane+dPass+(leadDist-dMerge);
+
+% Create a straight road segment with 2 lanes
+roadCenters = [ ...
+    0  0;...
+    totDist 0];
+laneWidth = 3.6;
+roadWidth = 2*laneWidth; % Two lane road
+road(scenario, roadCenters, roadWidth);
+
+% Add ego vehicle
+egoWaypionts = roadCenters+[0 -laneWidth/2]+[egoCar.RearOverhang 0]; % Follow right lane
+path(egoCar,egoWaypionts,vel);
+
+% Add lead car directly in front of ego vehicle
+leadWaypoints = [...
+    roadCenters(1,:)+[egoCar.Wheelbase+egoCar.FrontOverhang+leadDist+leadCar.RearOverhang 0];...
+    roadCenters(end,:)-[leadCar.Wheelbase+leadCar.FrontOverhang 0]]+[0 -laneWidth/2];
+path(leadCar,leadWaypoints,vel);
+
+% Add passing car
+yMerge = laneWidth/2*mergeFract;
+passWaypoints = [ ...
+    [0 laneWidth/2];...                % Left lane, next to ego vehicle
+    [dPass-0.1 yMerge];...             % Left lane, done passing
+    [dPass yMerge];...                 % Left lane, start merge
+    [dChangeLane+dPass -yMerge];...    % Right lane
+    [dChangeLane+dPass+0.1 -yMerge];...% Right lane
+    roadCenters(end,1) -yMerge]+[passCar.RearOverhang 0];
+path(passCar,passWaypoints,[passVel;passVel;passVel;vel;vel;vel]);
+end
+
+% Creates a driving scenario with two motorcycles traveling side-by-side in
+% front of the ego vehicle. The ego vehicle and the motorcycles are all
+% traveling in the right lane. The ego vehicle is traveling at a constant
+% speed of speedEgo kph. Both motorcycles are traveling at a constant speed
+% of speedMotorcycles kph. The motorcycles start at a distance of
+% distMotorcycles meters in front of the ego vehicle.
+function [scenario, egoCar] = createSideBySideScenario(duration,speedEgo,speedMotorcycles,distMotorcycles)
+
+% Define an empty scenario
+scenario = drivingScenario;
+scenario.SampleTime = 0.01;
+
+if rem(duration,scenario.SampleTime)==0
+    duration = duration+scenario.SampleTime/2;
+end
+
+% Create a straight road segment
+approxMotorcycleLength = 5;
+laneWidth = 3.6;
+
+% Find max length needed for road
+dEgo = duration*speedEgo/3.6;
+dMotorcycles = duration*speedMotorcycles/3.6+distMotorcycles;
+dMax = max(dEgo,dMotorcycles);
+
+xStart = 0;
+xEnd = dMax;
+xEnd = xEnd+approxMotorcycleLength; % Extra to accomodate length of motorcycles
+xEnd = xEnd+100; % Extra so end of road does not show in the bird's eye plot
+
+roadCenters = [...
+    xStart 0 0;...
+    xEnd   0 0];
+roadWidth = 2*laneWidth; % A two lane road
+road(scenario, roadCenters, roadWidth);
+
+% Add ego vehicle
+egoCar = vehicle(scenario);
+
+% Ego vehicle's path
+egoPath = [...
+    0 0 0;...
+    dEgo 0 0]+[egoCar.RearOverhang -laneWidth/2 0];
+path(egoCar,egoPath,speedEgo/3.6);
+
+% Add motorcycles in right lane in front of ego vehicle. Both motorcycles
+% are traveling side-by-side in the same lane and with the same speed.
+fracFromEdge = 0.25; % Fraction of lane width from left and right edges
+
+% Motorcycle on left
+leftMotorcycle = vehicle(scenario);
+applyMotorcycleDimensions(leftMotorcycle);
+
+% Left motorcycle's path
+motorcyclePath = [...
+    0 0 0;...
+    dMotorcycles 0 0]+[egoCar.RearOverhang+distMotorcycles -fracFromEdge*laneWidth 0];
+path(leftMotorcycle,motorcyclePath,speedMotorcycles/3.6);
+
+% Motorcycle on right
+rightMotorcycle = vehicle(scenario);
+applyMotorcycleDimensions(rightMotorcycle);
+
+% Right motorcycle's path
+motorcyclePath = [...
+    0 0 0;...
+    dMotorcycles 0 0]+[egoCar.RearOverhang+distMotorcycles -(1-fracFromEdge)*laneWidth 0];
+path(rightMotorcycle,motorcyclePath,speedMotorcycles/3.6);
+end
+
+% Apply motorcycle dimensions and RCS to the driving scenario's vehicle object
+function applyMotorcycleDimensions(motorcycle)
+motorcycle.Length = 2.2;
+motorcycle.Width = 0.6;
+motorcycle.Height = 1.5;
+motorcycle.RearOverhang = 0.37;
+motorcycle.FrontOverhang = 0.32;
+motorcycle.RCSPattern(:) = 0;
+end
